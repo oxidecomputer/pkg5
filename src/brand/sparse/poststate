@@ -32,6 +32,13 @@ case $cmd in
     $ZONE_STATE_CMD_HALT)
 	# Re-mount overlays to support patching while zone is down
 	find_active_ds
+	#
+	# XXX Stock illumos-gate appears to have slightly different behaviour
+	# to the OmniOS fork with respect to whether overlaid file systems are
+	# mounted or unmounted at this stage.  To avoid idempotency issues,
+	# unmount first and then remount.
+	#
+	umount_overlays
 	mount_overlays
 	unconfig_network
 	;;
