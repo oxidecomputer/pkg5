@@ -23,10 +23,16 @@
 
 	<initname>/usr/lib/brand/bhyve/init</initname>
 	<restartinit>true</restartinit>
+
+	<!-- XXX Until support for these features is added to illumos-gate,
+	     we have to disable these for now. -->
+
 	<!-- Only restart init if it exited 0, otherwise halt -->
-	<restartinit0>true</restartinit0>
+	<!-- XXX <restartinit0>true</restartinit0> -->
 	<!-- Just restart init, not the whole zone -->
-	<restartinitreboot>false</restartinitreboot>
+	<!-- XXX <restartinitreboot>false</restartinitreboot> -->
+
+	<!-- XXX ^^ -->
 
 	<login_cmd />
 	<forcedlogin_cmd />
@@ -50,7 +56,10 @@
 	<poststatechange>/usr/lib/brand/bhyve/support poststate %z %R</poststatechange>
 	<query />
 
-	<security-flags>aslr,forbidnullmap,noexecstack</security-flags>
+	<!-- XXX Until support for these features is added to illumos-gate,
+	     we have to disable these for now. -->
+	<!--<security-flags>aslr,forbidnullmap,noexecstack</security-flags>-->
+	<!-- XXX ^^ -->
 
 	<privilege set="default" name="net_rawaccess" ip-type="exclusive" />
 	<privilege set="default" name="proc_clock_highres" />
