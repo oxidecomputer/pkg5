@@ -158,16 +158,17 @@ def cleanup():
                 os.unlink(f)
 
 def notes_block(release_url=None):
-        url = "https://omnios.org/"
-        if release_url is None:
-                release_url = misc.get_release_notes_url()
-        msg("\n" + "-" * 79)
-        msg("{:42} {}".format("Find release notes:", release_url))
-        msg("-" * 79)
-        msg("{:42} {}{}".format("Get a support contract:", url, "support"))
-        msg("{:42} {}{}".format("Sponsor OmniOS development:", url, "patron"))
-        msg("{:42} {}{}".format("Contribute to OmniOS:", url, "joinus"))
-        msg("-" * 79 + "\n")
+        # url = "https://omnios.org/"
+        # if release_url is None:
+        #         release_url = misc.get_release_notes_url()
+        # msg("\n" + "-" * 79)
+        # msg("{:42} {}".format("Find release notes:", release_url))
+        # msg("-" * 79)
+        # msg("{:42} {}{}".format("Get a support contract:", url, "support"))
+        # msg("{:42} {}{}".format("Sponsor OmniOS development:", url, "patron"))
+        # msg("{:42} {}{}".format("Contribute to OmniOS:", url, "joinus"))
+        # msg("-" * 79 + "\n")
+        pass
 
 def format_update_error(e):
         # This message is displayed to the user whenever an
