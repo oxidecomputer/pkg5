@@ -14,7 +14,6 @@
 
 FILES = \
 	OMNIbhyve.xml \
-	OMNIemu.xml \
 	OMNIillumos.xml \
 	OMNIkvm.xml \
 	OMNIlx.xml OMNIlx26.xml \

@@ -17,7 +17,7 @@ clean := TARGET = clean
 clobber := TARGET = clobber
 install := TARGET = install
 
-SUBDIRS = shared etc ipkg lipkg sparse pkgsrc lx illumos kvm bhyve emu
+SUBDIRS = shared etc ipkg lipkg sparse pkgsrc lx illumos kvm bhyve
 
 all clean clobber install: $(SUBDIRS)
 

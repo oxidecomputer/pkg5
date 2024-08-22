@@ -251,7 +251,6 @@ man8_files = [
 ]
 man7_files = [
     "man/bhyve.7",
-    "man/emu.7",
     "man/illumos.7",
     "man/ipkg.7",
     "man/kvm.7",
