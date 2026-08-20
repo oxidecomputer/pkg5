@@ -2603,6 +2603,33 @@ class TestPkgInstallUpdateSolverOutput(pkg5unittest.SingleDepotTestCase):
             close
         """
 
+    # An incorporation, the only version of cause-app that it allows,
+    # and the library version that cause-app requires but which the
+    # incorporation excludes. cause-branch fails only as a consequence.
+    cause = """
+            open cause-incorp@1.0,5.11-0
+            add depend type=incorporate fmri=pkg:/cause-app@2.0
+            add depend type=incorporate fmri=pkg:/cause-branch@1.0
+            add depend type=incorporate fmri=pkg:/cause-lib@1.0
+            close
+            open cause-app@1.0,5.11-0
+            add depend type=require fmri=pkg:/cause-lib@1.0
+            close
+            open cause-app@2.0,5.11-0
+            add depend type=require fmri=pkg:/cause-branch@1.0
+            add depend type=require fmri=pkg:/cause-lib@2.0
+            close
+            open cause-branch@1.0,5.11-0
+            add depend type=require fmri=pkg:/cause-lib@2.0
+            close
+            open cause-branch@2.0,5.11-0
+            close
+            open cause-lib@1.0,5.11-0
+            close
+            open cause-lib@2.0,5.11-0
+            close
+        """
+
     def test_output_two_issues(self):
         """^^^ hard to find a good name for this, it tests for bug
         21130996.
@@ -2626,6 +2653,76 @@ class TestPkgInstallUpdateSolverOutput(pkg5unittest.SingleDepotTestCase):
         self.assertFalse(
             "octo@2.0" in self.errout,
             "Newer version should not be shown in solver error.",
+        )
+
+    def test_output_root_cause_summary(self):
+        """Without -v, a failed operation prints the root cause
+        summary rather than the full rejection tree."""
+
+        self.pkgsend_bulk(self.rurl, (self.incorp, self.octo10, self.octo20))
+        self.image_create(self.rurl)
+
+        self.pkg("install incorp octo@2")
+        self.pkg("install octo@1", exit=1)
+
+        # The summary must identify the installed incorporation as the
+        # root cause.
+        self.assertTrue(
+            "This is due to the following root cause(s):" in self.errout,
+            "Root cause summary not shown in solver error.",
+        )
+        self.assertTrue(
+            "incorp@1.0" in self.errout,
+            "Excluding incorporation not shown in solver error.",
+        )
+        # The full rejection tree is only shown with -v.
+        self.assertFalse(
+            "Reject:" in self.errout,
+            "Full rejection tree shown without -v.",
+        )
+        self.assertTrue(
+            "Re-run the operation with the -v option" in self.errout,
+            "Verbose hint not shown in solver error.",
+        )
+        # Check that the notice about a newer version already installed
+        # is omited (it's not relevant).
+        self.assertFalse(
+            "octo@2.0" in self.errout,
+            "Newer version should not be shown in solver error.",
+        )
+
+    def test_output_root_cause_collateral(self):
+        """The summary must report the dependency that could not be
+        satisfied rather than a package whose rejection is only a
+        consequence of it."""
+
+        self.pkgsend_bulk(self.rurl, (self.cause,))
+        self.image_create(self.rurl)
+
+        self.pkg("install cause-incorp")
+        self.pkg("install cause-app", exit=1)
+
+        # cause-app@2.0 is the only version the incorporation allows
+        # and it requires cause-lib@2.0, which the same incorporation
+        # excludes. That is the root cause.
+        self.assertTrue(
+            "Package: pkg://test/cause-lib@2.0" in self.errout,
+            "Root cause not identified in solver error.",
+        )
+        self.assertTrue(
+            "Blocks:  pkg://test/cause-app@2.0" in self.errout,
+            "Package blocked by the root cause not shown in solver error.",
+        )
+        self.assertTrue(
+            "('require' dependency on cause-lib@2.0)" in self.errout,
+            "Dependency on the root cause not shown in solver error.",
+        )
+        # cause-branch fails only because cause-lib@2.0 does; reporting
+        # it as a root cause sends the administrator after the wrong
+        # package.
+        self.assertFalse(
+            "cause-branch" in self.errout,
+            "Consequential rejection reported as a root cause.",
         )
 
 
@@ -8172,13 +8269,40 @@ class TestDependencies(pkg5unittest.SingleDepotTestCase):
         )
         self.assertFalse("No solution" in self.errout)
         # desktop-incorporation should not be listed as a rejected
-        # package; rejected packages are always listed with full FMRI
-        # and scheme
+        # package
         self.assertFalse(
             "pkg://test/consolidation/desktop/desktop-incorporation"
             in self.errout
         )
-        # all of these should show up as rejected packages
+        # the default root cause summary lists the failed proposed
+        # packages by name and identifies the package at the root of
+        # the failure
+        self.assertTrue("\tcommunication/im/libotr" in self.errout)
+        self.assertTrue("\tgroup/feature/multi-user-desktop" in self.errout)
+        self.assertTrue("pkg://test/communication/im/pidgin" in self.errout)
+        # both versions of pidgin are at the root of the failure. One is
+        # excluded by the incorporation and the other by the optional
+        # dependency in the proposed libotr.
+        self.assertTrue(
+            "Rejected by 'optional' dependency in proposed package "
+            "'communication/im/libotr'" in self.errout
+        )
+        # the package whose dependency could not be satisfied is named
+        self.assertTrue("  Blocks:  pkg://test/" in self.errout)
+
+        # with -v, the full rejection tree is shown instead
+        self.pkg(
+            "install -nv multi-user-desktop@latest libotr@latest "
+            "desktop-incorporation@latest",
+            exit=1,
+        )
+        self.assertFalse("No solution" in self.errout)
+        self.assertFalse(
+            "pkg://test/consolidation/desktop/desktop-incorporation"
+            in self.errout
+        )
+        # all of these should show up as rejected packages, listed
+        # with full FMRI and scheme
         self.assertTrue("pkg://test/communication/im/libotr" in self.errout)
         self.assertTrue(
             "pkg://test/group/feature/multi-user-desktop" in self.errout
